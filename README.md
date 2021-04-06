@@ -1,5 +1,5 @@
 # MSiA423 Template Repository
-
+# Qiaozhen Wu and Sherman Lu
 <!-- toc -->
 
 - [Directory structure](#directory-structure)
