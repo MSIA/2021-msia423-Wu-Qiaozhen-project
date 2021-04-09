@@ -1,6 +1,24 @@
 # MSiA423 Qiaozhen Wu Project
 # QA: Sherman Lu
 <!-- toc -->
+MSiA 423 K-POP Music Recommender 
+
+Project creator and Developer: Qiaozhen Wu 
+(QA contributions: Shermen Lu) 
+
+Project Charter 
+
+Vision 
+
+With the rise in popularity of Korean pop music (K-Pop) around the world, the global music scene is witnessing a shift from the previously western-dominating industry to a more diverse market with non-English songs. Music is a form of communication capable of surpassing language and cultural differences, allowing people from various cultural backgrounds to experience arts from other cultures in the most authentic ways. The music industries in the US and Korea maintain substantially different standards, but they share similarities in the common emotions songs convey and in the genres of music. Therefore, what one likes to listen to among English songs might be a good indicator of their taste for Korean songs as well. With the help of my app, users would receive recommendation of Korean songs regarding their preference among western music. The app would hopefully introduce K-pop to more people, reduce prejudice and stereotypes on the east in western countries and thus help break cultural barriers. 
+
+Mission 
+
+Users would input three of their favorite western songs/artists, and the app would output a recommendation of three Korean songs/artist that might suit the users’ tastes. The app will use dataset from the Spotify Web API for 200 Korean songs and 200 English songs, and also a dataset that aggregates the former one to the level of each artist. The numerical metric of each songs includes values like “speechless”, “danceability”, “energy” and “acousticness”, which Spotify uses to evaluate each song. The model will be using KNN model that calculates the distance between the inputed songs/artist and output their “closest” Korean counter parts. If time permits, I will also experiment on a feature that document the lyrics and themes of each songs, which potentially would be a significant indicator of the user’s taste apart from the metrics of Spotify.
+
+Success Criteria 
+
+To test the performance of the model, I will collect playlists of users who listens to both English and Korean songs scraped from twitter, and calculate the true positive rate of the recommender. The recommender will be deployed if the true positive rate reaches 0.7. To determine the business success of my app among users, standard A/B testing will be used to evaluate whether users like the recommended songs based on their ratings, by randomly assign half of the users to randomly generated recommendation. Overall, the app would introduce Korean songs to the users that might be hearing it for the first time, and provide them with a novel while enjoyable music experience. 
 
 - [Directory structure](#directory-structure)
 - [Running the app](#running-the-app)
