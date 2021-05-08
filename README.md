@@ -112,13 +112,13 @@ export AWS_SECRET_ACCESS_KEY="YOUR_SECRET_ACCESS_KEY"
 After seting up the AWS credential, to upload data to S3 from local, use the following command. The defualt of local_path
 is 'data/sample/final_train_s3.csv'. And the default of s3_path is 's3://2021-msia423-wu-qiaozhen/kpop_recommender_s3.csv'.
 ```
-python3 run_s3.py --local_path={your_local_path} --s3_path={your_s3_path}
+python src/s3.py --local_path={your_local_path} --s3_path={your_s3_path}
 ```
 
 #### Download data to local from S3 
 To upload data to S3 from local, use the following command, using the same default value as above:
 ```
- python3 run_s3.py --download --local_path={your_local_path} --s3_path={your_s3_path}
+ python src/s3.py --download --local_path={your_local_path} --s3_path={your_s3_path}
 ```
 
 ## Database
@@ -177,7 +177,7 @@ AWS credential section. Note please replace the section within and including the
    export MYSQL_PASSWORD="YOUR_SQL_PASSWORD"
    export MYSQL_HOST="YOUR_SQL_HOST"
    export MYSQL_PORT="YOUR_SQL_PORT"
-   export MYSQL_DATABASE="YOUR_DATABASE_NAME"
+   export DATABASE_NAME="YOUR_DATABASE_NAME"
 ```
 
 ##### 1. Connecting to MYSQL
@@ -194,13 +194,13 @@ show databases; use {database name}; show tables;
 
 To create a new databases, use the the following command. The script specifies the engine string in config/flaskconfig.py.
 ```
-docker run -it -e MYSQL_HOST -e MYSQL_PORT -e MYSQL_USER -e MYSQL_PASSWORD -e MYSQL_DATABASE kpop_recommender run.py create_db --engine_string=={your_engine_string}
+docker run -it -e MYSQL_HOST -e MYSQL_PORT -e MYSQL_USER -e MYSQL_PASSWORD -e DATABASE_NAME kpop_recommender run.py create_db --engine_string=={your_engine_string}
 ```
 
 ##### 3. Ingest data into database with docker image
 Your can also ingest data through the following command. If you don't specify the parameters "artist","album","title," the default would "bts","BE","Dis-ease" respectively.
 ```
-docker run -it -e MYSQL_HOST -e MYSQL_PORT -e MYSQL_USER -e MYSQL_PASSWORD -e MYSQL_DATABASE kpop_recommender run.py ingest --artist={your_artist} --album={your_album} --title ={your_song_title}
+docker run -it -e MYSQL_HOST -e MYSQL_PORT -e MYSQL_USER -e MYSQL_PASSWORD -e DATABASE_NAME kpop_recommender run.py ingest --artist={your_artist} --album={your_album} --title ={your_song_title}
 ```
 
 
