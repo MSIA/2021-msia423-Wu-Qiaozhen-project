@@ -9,7 +9,13 @@ __pycache__/
 .mysqlconfig
 .qasqlconfig
 .awscredconfig
-
+.env
+.venv
+env/
+venv/
+.mypy_cache/
+*.jar
+dist/
 
 data/*
 !data/sample/

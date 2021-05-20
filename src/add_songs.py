@@ -39,7 +39,7 @@ def create_db(engine_string: str) -> None:
     engine = sqlalchemy.create_engine(engine_string)
 
     Base.metadata.create_all(engine)
-    logger.info("Database created.")
+    logger.info("Database msia423_db created.")
 
 
 class TrackManager:

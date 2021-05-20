@@ -112,13 +112,21 @@ export AWS_SECRET_ACCESS_KEY="YOUR_SECRET_ACCESS_KEY"
 After seting up the AWS credential, to upload data to S3 from local, use the following command. The defualt of local_path
 is 'data/sample/final_train_s3.csv'. And the default of s3_path is 's3://2021-msia423-wu-qiaozhen/kpop_recommender_s3.csv'.
 ```
-python src/s3.py --local_path={your_local_path} --s3_path={your_s3_path}
+python run_s3.py --local_path={your_local_path} --s3path={your_s3_path}
 ```
 
 #### Download data to local from S3 
 To upload data to S3 from local, use the following command, using the same default value as above:
 ```
- python src/s3.py --download --local_path={your_local_path} --s3_path={your_s3_path}
+ python run_s3.py --download --local_path={your_local_path} --s3path={your_s3_path}
+```
+
+#### Upload data to S3 through docker
+```
+docker run\ 
+    -e AWS_ACCESS_KEY_ID\
+    -e AWS_SECRET_ACCESS_KEY\ 
+    kpop_recommender run_s3.py --local_path={your_local_path} --s3path={your_s3path}
 ```
 
 ## Database
@@ -127,18 +135,18 @@ To upload data to S3 from local, use the following command, using the same defau
 #### Create the database 
 To create the database in the location configured in `config.py` run: 
 
-`python run.py create_db --engine_string=<engine_string>`
+`python run_db.py create_db --engine_string=<engine_string>`
 
-By default, `python run.py create_db` creates a database at `sqlite:///data/tracks.db`.
+By default, `python run_db.py create_db` creates a database at `sqlite:///data/tracks.db`.
 
 #### Adding songs 
 To add songs to the database:
 
-`python run.py ingest --engine_string=<engine_string> --artist=<ARTIST> --title=<TITLE> --album=<ALBUM>`
+`python run_db.py ingest --engine_string=<engine_string> --artist=<ARTIST> --title=<TITLE> --album=<ALBUM>`
 
-By default, `python run.py ingest` adds *Minor Cause* by Emancipator to the SQLite database located in `sqlite:///data/tracks.db`.
+By default, `python run_db.py ingest` adds *Dis-ease* by bts to the SQLite database.
 
-#### Defining your engine string 
+#### A Note on Engine String 
 A SQLAlchemy database connection is defined by a string with the following format:
 
 `dialect+driver://username:password@host:port/database`
@@ -185,24 +193,61 @@ AWS credential section. Note please replace the section within and including the
 To connect to your MYSQL database, run the following command:
 
 ```
-docker run -it --rm mysql:5.7.33 mysql -h$MYSQL_HOST -u$MYSQL_USER -p$MYSQL_PASSWORD
+docker run -it\
+    --rm mysql:5.7.33 mysql\
+    -h$MYSQL_HOST\
+    -u$MYSQL_USER\
+    -p$MYSQL_PASSWORD\
 ```
 If you succeeded, you will enter the interactive mysql session. To view your tables, use the commands:\
-show databases; use {database name}; show tables;
+to login into the sqlite platform:
+```
+show databases; 
+```
+to switch to a specific database:
+```
+use {database name}; 
+```
+to view tables in the database:
+```
+show tables;
+```
 
 ##### 2. Create database with docker image
 
 To create a new databases, use the the following command. The script specifies the engine string in config/flaskconfig.py.
 ```
-docker run -it -e MYSQL_HOST -e MYSQL_PORT -e MYSQL_USER -e MYSQL_PASSWORD -e DATABASE_NAME kpop_recommender run.py create_db --engine_string=={your_engine_string}
+docker run -it\
+    -e MYSQL_HOST\ 
+    -e MYSQL_PORT\ 
+    -e MYSQL_USER\ 
+    -e MYSQL_PASSWORD\ 
+    -e DATABASE_NAME kpop_recommender run.py create_db --engine_string=={your_engine_string}
+```
+#### Create database with sqlite
+To create a database on your sqlite, use the command
+```
+python3 run_db.py create_db --engine_string=={your_engine_string}
 ```
 
 ##### 3. Ingest data into database with docker image
 Your can also ingest data through the following command. If you don't specify the parameters "artist","album","title," the default would "bts","BE","Dis-ease" respectively.
 ```
-docker run -it -e MYSQL_HOST -e MYSQL_PORT -e MYSQL_USER -e MYSQL_PASSWORD -e DATABASE_NAME kpop_recommender run.py ingest --artist={your_artist} --album={your_album} --title ={your_song_title}
+docker run -it\ 
+    -e MYSQL_HOST\
+    -e MYSQL_PORT\
+    -e MYSQL_USER\
+    -e MYSQL_PASSWORD\ 
+    -e DATABASE_NAME kpop_recommender run.py ingest --artist={your_artist} --album={your_album} --title ={your_song_title}
 ```
-
-
+#### Ingest data into database with sqlite
+To ingest data to sqlite, use the command:
+```
+python3 run_db.py ingest\
+    --artist={your_artist}\ 
+    --album={your_album}\ 
+    --title ={your_song_title}\ 
+    --engine_string=={your_engine_string} --local_path=<local path to data>
+```
 
  
