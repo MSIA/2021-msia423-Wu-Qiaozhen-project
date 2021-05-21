@@ -1,40 +1,43 @@
-# MSiA423 Qiaozhen Wu Project
-# QA: Sherman Lu
+# MSiA423 Kpop Recommender 
+
+Author: Qiaozhen Wu \
+QA: Sherman Lu
+
 <!-- toc -->
-MSiA 423 K-POP Music Recommender 
 
-Project creator and Developer: Qiaozhen Wu 
-(QA contributions: Shermen Lu) 
+## Project Charter 
+![](figures/kpop.jpg)
 
-Project Charter 
-
-Vision 
-:i
+#### Vision:
 
 With the rise in popularity of Korean pop music (K-Pop) around the world, the global music scene is witnessing a shift from the previously western-dominating industry to a more diverse market with non-English songs. Music is a form of communication capable of surpassing language and cultural differences, allowing people from various cultural backgrounds to experience arts from other cultures in the most authentic ways. The music industries in the US and Korea maintain substantially different standards, but they share similarities in the common emotions songs convey and in the genres of music. Therefore, what one likes to listen to among English songs might be a good indicator of their taste for Korean songs as well. With the help of my app, users would receive recommendation of Korean songs regarding their preference among western music. The app would hopefully introduce K-pop to more people, reduce prejudice and stereotypes on the east in western countries and thus help break cultural barriers. 
 
-Mission 
+#### Mission:
 
 Users would input three of their favorite western songs/artists, and the app would output a recommendation of three Korean songs/artist that might suit the users’ tastes. The app will use dataset from the Spotify Web API (https://developer.spotify.com/documentation/web-api/) for 200 Korean songs and 200 English songs, and also a dataset that aggregates the former one to the level of each artist. The numerical metric of each songs includes values like “speechless”, “danceability”, “energy” and “acousticness”, which Spotify uses to evaluate each song. The model will be using KNN model that calculates the distance between the inputed songs/artist and output their “closest” Korean counter parts. If time permits, I will also experiment on a feature that document the lyrics and themes of each songs, which potentially would be a significant indicator of the user’s taste apart from the metrics of Spotify.
 
-Success Criteria 
+#### Success Criteria:
 
 To test the performance of the model, I will collect playlists of users who listens to both English and Korean songs scraped from twitter, and calculate the true positive rate of the recommender. The recommender will be deployed if the true positive rate reaches 0.7. To determine the business success of my app among users, standard A/B testing will be used to evaluate whether users like the recommended songs based on their ratings, by randomly assign half of the users to randomly generated recommendation. Overall, the app would introduce Korean songs to the users that might be hearing it for the first time, and provide them with a novel while enjoyable music experience. 
 
 - [Directory structure](#directory-structure)
-- [Running the app](#running-the-app)
-  * [1. Initialize the database](#1-initialize-the-database)
-    + [Create the database with a single song](#create-the-database-with-a-single-song)
-    + [Adding additional songs](#adding-additional-songs)
-    + [Defining your engine string](#defining-your-engine-string)
-      - [Local SQLite database](#local-sqlite-database)
-  * [2. Configure Flask app](#2-configure-flask-app)
-  * [3. Run the Flask app](#3-run-the-flask-app)
+- [Data Aquisition](#Data-Aquisition)
+- [Create Docker Image](#2-Create-Docker-Image)
+- [How to upload/Download data on S3](#3-How-to-upload/Download-data-on-S3)
+  * [1. Set up AWS credential in your environment](#Set-up-AWS-credential-in-your-environment)
+  * [Upload data to S3 from local](#Upload-data-to-S3-from-local)
+  * [Download data to local from S3](#Download-data-to-local-from-S3)
 - [Running the app in Docker](#running-the-app-in-docker)
-  * [1. Build the image](#1-build-the-image)
-  * [2. Run the container](#2-run-the-container)
-  * [3. Kill the container](#3-kill-the-container)
-  * [Workaround for potential Docker problem for Windows.](#workaround-for-potential-docker-problem-for-windows)
+  * [Initialize the database](#Initialize-the-database)
+    * [Create the database](#Creat-the-database)
+    * [Adding songs](#Adding-songs)
+    * [Defining your engine string](#Defining-your-engine-string)
+    * [Local SQLite database](#Local-SQLite-database)
+  * [Connecting to remote databases](#Connecting-to-remote-databases)
+    * [Requirements](#Requirements)
+    * [1. Connecting to MYSQL](#1-Connecting-to-MYSQL)
+    * [2. Create database with docker image](#2-Create-database-with-docker-image)
+    * [3. Ingest data into database with docker image](#3-Ingest-data-into-database-with-docker-image)
 
 <!-- tocstop -->
 
@@ -82,36 +85,79 @@ To test the performance of the model, I will collect playlists of users who list
 ├── requirements.txt                  <- Python package dependencies 
 ```
 
-## Running the app
+## Data Aquisition
+
+To aquire the data, download the dataset from this [link](https://www.kaggle.com/qiaozhenwu/kpopwesternsongs). You can also find the dataset in the data/sample/ folder.
+
+## Create Docker Image
+
+Use the following command to create the docker image kpop-recommender:
+```
+docker build -f Dockerfile_data -t kpop_recommender .
+```
+## How to upload/Download data on S3
+
+
+#### Set up AWS credential in your environment 
+
+To get access to S3, you need two environment variables for your secret keys to AWS:AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.You would be able to get these
+values from yor AWS S3 console, and run the following command to export them to your enviroment.
+```
+export AWS_ACCESS_KEY_ID="YOUR_ACCESS_KEY_ID"
+export AWS_SECRET_ACCESS_KEY="YOUR_SECRET_ACCESS_KEY"
+```
+
+#### Upload data to S3 from local 
+
+After seting up the AWS credential, to upload data to S3 from local, use the following command. The defualt of local_path
+is 'data/sample/final_train_s3.csv'. And the default of s3_path is 's3://2021-msia423-wu-qiaozhen/kpop_recommender_s3.csv'.
+```
+python run_s3.py --local_path={your_local_path} --s3path={your_s3_path}
+```
+
+#### Download data to local from S3 
+To upload data to S3 from local, use the following command, using the same default value as above:
+```
+ python run_s3.py --download --local_path={your_local_path} --s3path={your_s3_path}
+```
+
+#### Upload data to S3 through docker
+```
+docker run\ 
+    -e AWS_ACCESS_KEY_ID\
+    -e AWS_SECRET_ACCESS_KEY\ 
+    kpop_recommender run_s3.py --local_path={your_local_path} --s3path={your_s3path}
+```
+
+## Database
 ### 1. Initialize the database 
 
 #### Create the database 
 To create the database in the location configured in `config.py` run: 
 
-`python run.py create_db --engine_string=<engine_string>`
+`python run_db.py create_db --engine_string=<engine_string>`
 
-By default, `python run.py create_db` creates a database at `sqlite:///data/tracks.db`.
+By default, `python run_db.py create_db` creates a database at `sqlite:///data/tracks.db`.
 
 #### Adding songs 
 To add songs to the database:
 
-`python run.py ingest --engine_string=<engine_string> --artist=<ARTIST> --title=<TITLE> --album=<ALBUM>`
+`python run_db.py ingest --engine_string=<engine_string> --artist=<ARTIST> --title=<TITLE> --album=<ALBUM>`
 
-By default, `python run.py ingest` adds *Minor Cause* by Emancipator to the SQLite database located in `sqlite:///data/tracks.db`.
+By default, `python run_db.py ingest` adds *Dis-ease* by bts to the SQLite database.
 
-#### Defining your engine string 
+#### A Note on Engine String 
 A SQLAlchemy database connection is defined by a string with the following format:
 
 `dialect+driver://username:password@host:port/database`
 
 The `+dialect` is optional and if not provided, a default is used. For a more detailed description of what `dialect` and `driver` are and how a connection is made, you can see the documentation [here](https://docs.sqlalchemy.org/en/13/core/engines.html). We will cover SQLAlchemy and connection strings in the SQLAlchemy lab session on 
-##### Local SQLite database 
+#### Local SQLite database 
 
 A local SQLite database can be created for development and local testing. It does not require a username or password and replaces the host and port with the path to the database file: 
 
 ```python
-engine_string='sqlite:///data/tracks.db'
-
+engine_string='sqlite:///data/kpop_recommender.db'
 ```
 
 The three `///` denote that it is a relative path to where the code is being run (which is from the root of this directory).
@@ -119,106 +165,89 @@ The three `///` denote that it is a relative path to where the code is being run
 You can also define the absolute path with four `////`, for example:
 
 ```python
-engine_string = 'sqlite://///Users/cmawer/Repos/2020-MSIA423-template-repository/data/tracks.db'
+engine_string = 'sqlite://///Users/Desktop/MSIAHW/423/2021-msia423-Wu-Qiaozhen-project/data/kpop_recommender.db'
+```
+### 2. Connecting to remote databases 
+
+##### Requirements 
+To successfully connect to the remote databases, you need too:
+
+1. Connect to the Northwestern VPN. 
+   
+
+2. Build the kpop_recommender image built as described in the [Docker Image section].
+   
+
+3. You need to set up the following environment variables from building your 
+AWS credential section. Note please replace the section within and including the "".
+```
+   export MYSQL_USER="YOUR_SQL_USER_NAME"
+   export MYSQL_PASSWORD="YOUR_SQL_PASSWORD"
+   export MYSQL_HOST="YOUR_SQL_HOST"
+   export MYSQL_PORT="YOUR_SQL_PORT"
+   export DATABASE_NAME="YOUR_DATABASE_NAME"
 ```
 
+##### 1. Connecting to MYSQL
 
-### 2. Configure Flask app 
+To connect to your MYSQL database, run the following command:
 
-`config/flaskconfig.py` holds the configurations for the Flask app. It includes the following configurations:
-
-```python
-DEBUG = True  # Keep True for debugging, change to False when moving to production 
-LOGGING_CONFIG = "config/logging/local.conf"  # Path to file that configures Python logger
-HOST = "0.0.0.0" # the host that is running the app. 0.0.0.0 when running locally 
-PORT = 5000  # What port to expose app on. Must be the same as the port exposed in app/Dockerfile 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///data/tracks.db'  # URI (engine string) for database that contains tracks
-APP_NAME = "penny-lane"
-SQLALCHEMY_TRACK_MODIFICATIONS = True 
-SQLALCHEMY_ECHO = False  # If true, SQL for queries made will be printed
-MAX_ROWS_SHOW = 100 # Limits the number of rows returned from the database 
+```
+docker run -it\
+    --rm mysql:5.7.33 mysql\
+    -h$MYSQL_HOST\
+    -u$MYSQL_USER\
+    -p$MYSQL_PASSWORD\
+```
+If you succeeded, you will enter the interactive mysql session. To view your tables, use the commands:\
+to login into the sqlite platform:
+```
+show databases; 
+```
+to switch to a specific database:
+```
+use {database name}; 
+```
+to view tables in the database:
+```
+show tables;
 ```
 
-### 3. Run the Flask app 
+##### 2. Create database with docker image
 
-To run the Flask app, run: 
-
-```bash
-python app.py
+To create a new databases, use the the following command. The script specifies the engine string in config/flaskconfig.py.
+```
+docker run -it\
+    -e MYSQL_HOST\ 
+    -e MYSQL_PORT\ 
+    -e MYSQL_USER\ 
+    -e MYSQL_PASSWORD\ 
+    -e DATABASE_NAME kpop_recommender run.py create_db --engine_string=={your_engine_string}
+```
+#### Create database with sqlite
+To create a database on your sqlite, use the command
+```
+python3 run_db.py create_db --engine_string=={your_engine_string}
 ```
 
-You should now be able to access the app at http://0.0.0.0:5000/ in your browser.
-
-## Running the app in Docker 
-
-### 1. Build the image 
-
-The Dockerfile for running the flask app is in the `app/` folder. To build the image, run from this directory (the root of the repo): 
-
-```bash
- docker build -f app/Dockerfile -t pennylane .
+##### 3. Ingest data into database with docker image
+Your can also ingest data through the following command. If you don't specify the parameters "artist","album","title," the default would "bts","BE","Dis-ease" respectively.
+```
+docker run -it\ 
+    -e MYSQL_HOST\
+    -e MYSQL_PORT\
+    -e MYSQL_USER\
+    -e MYSQL_PASSWORD\ 
+    -e DATABASE_NAME kpop_recommender run.py ingest --artist={your_artist} --album={your_album} --title ={your_song_title}
+```
+#### Ingest data into database with sqlite
+To ingest data to sqlite, use the command:
+```
+python3 run_db.py ingest\
+    --artist={your_artist}\ 
+    --album={your_album}\ 
+    --title ={your_song_title}\ 
+    --engine_string=={your_engine_string} --local_path=<local path to data>
 ```
 
-This command builds the Docker image, with the tag `pennylane`, based on the instructions in `app/Dockerfile` and the files existing in this directory.
- 
-### 2. Run the container 
-
-To run the app, run from this directory: 
-
-```bash
-docker run -p 5000:5000 --name test pennylane
-```
-You should now be able to access the app at http://0.0.0.0:5000/ in your browser.
-
-This command runs the `pennylane` image as a container named `test` and forwards the port 5000 from container to your laptop so that you can access the flask app exposed through that port. 
-
-If `PORT` in `config/flaskconfig.py` is changed, this port should be changed accordingly (as should the `EXPOSE 5000` line in `app/Dockerfile`)
-
-### 3. Kill the container 
-
-Once finished with the app, you will need to kill the container. To do so: 
-
-```bash
-docker kill test 
-```
-
-where `test` is the name given in the `docker run` command.
-
-### Example using `python3` as an entry point
-
-We have included another example of a Dockerfile, `app/Dockerfile_python` that has `python3` as the entry point such that when you run the image as a container, the command `python3` is run, followed by the arguments given in the `docker run` command after the image name. 
-
-To build this image: 
-
-```bash
- docker build -f app/Dockerfile_python -t pennylane .
-```
-
-then run the `docker run` command: 
-
-```bash
-docker run -p 5000:5000 --name test pennylane app.py
-```
-
-The new image defines the entry point command as `python3`. Building the sample PennyLane image this way will require initializing the database prior to building the image so that it is copied over, rather than created when the container is run. Therefore, please **do the step [Create the database with a single song](#create-the-database-with-a-single-song) above before building the image**.
-
-# Testing
-
-From within the Docker container, the following command should work to run unit tests when run from the root of the repository: 
-
-```bash
-python -m pytest
-``` 
-
-Using Docker, run the following, if the image has not been built yet:
-
-```bash
- docker build -f app/Dockerfile_python -t pennylane .
-```
-
-To run the tests, run: 
-
-```bash
- docker run penny -m pytest
-```
  

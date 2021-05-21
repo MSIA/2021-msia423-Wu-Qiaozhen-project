@@ -6,7 +6,16 @@ __pycache__/
 .idea/
 .log
 .ipynb_checkpoints/
-
+.mysqlconfig
+.qasqlconfig
+.awscredconfig
+.env
+.venv
+env/
+venv/
+.mypy_cache/
+*.jar
+dist/
 
 data/*
 !data/sample/

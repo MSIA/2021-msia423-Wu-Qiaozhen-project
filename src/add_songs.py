@@ -11,13 +11,12 @@ logger.setLevel("INFO")
 
 Base = declarative_base()
 
-
 class Tracks(Base):
     """Create a data model for the database to be set up for capturing songs
 
     """
 
-    __tablename__ = 'tracks'
+    __tablename__ = 'kpop_recommender'
 
     id = Column(Integer, primary_key=True)
     title = Column(String(100), unique=False, nullable=False)
@@ -40,7 +39,7 @@ def create_db(engine_string: str) -> None:
     engine = sqlalchemy.create_engine(engine_string)
 
     Base.metadata.create_all(engine)
-    logger.info("Database created.")
+    logger.info("Database msia423_db created.")
 
 
 class TrackManager:
