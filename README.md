@@ -14,7 +14,7 @@ With the rise in popularity of Korean pop music (K-Pop) around the world, the gl
 
 #### Mission:
 
-Users would input three of their favorite western songs/artists, and the app would output a recommendation of three Korean songs/artist that might suit the users’ tastes. The app will use dataset from the Spotify Web API (https://developer.spotify.com/documentation/web-api/) for 200 Korean songs and 200 English songs, and also a dataset that aggregates the former one to the level of each artist. The numerical metric of each songs includes values like “speechless”, “danceability”, “energy” and “acousticness”, which Spotify uses to evaluate each song. The model will be using KNN model that calculates the distance between the inputed songs/artist and output their “closest” Korean counter parts. If time permits, I will also experiment on a feature that document the lyrics and themes of each songs, which potentially would be a significant indicator of the user’s taste apart from the metrics of Spotify.
+Users would input one of their favorite western songs/artists, and the app would output a recommendation of one Korean songs/artist that might suit the users’ tastes. The app will use dataset from the Spotify Web API (https://developer.spotify.com/documentation/web-api/) for 200 Korean songs and 200 English songs, and also a dataset that aggregates the former one to the level of each artist. The numerical metric of each songs includes values like “speechless”, “danceability”, “energy” and “acousticness”, which Spotify uses to evaluate each song. The model will be using KNN model that calculates the distance between the inputed songs/artist and output their “closest” Korean counter parts. If time permits, I will also experiment on a feature that document the lyrics and themes of each songs, which potentially would be a significant indicator of the user’s taste apart from the metrics of Spotify.
 
 #### Success Criteria:
 
@@ -91,12 +91,12 @@ To aquire the data, download the dataset from this [link](https://www.kaggle.com
 
 ## Create Docker Image
 
-Use the following command to create the docker image kpop-recommender:
+Use the following command to create the docker image kpop_recommender and kpop_recommender_app:
 ```
-docker build -f Dockerfile_data -t kpop_recommender .
+make image_data
+make image_app
 ```
 ## How to upload/Download data on S3
-
 
 #### Set up AWS credential in your environment 
 
@@ -128,9 +128,98 @@ docker run\
     -e AWS_SECRET_ACCESS_KEY\ 
     kpop_recommender run_s3.py --local_path={your_local_path} --s3path={your_s3path}
 ```
+##Model Pipeline
 
-## Database
-### 1. Initialize the database 
+### Whole Model Pipeline
+
+You can run the whole model pipeline with the following the command.
+```angular2html
+make model_all
+```
+
+This command will run the whole model pipeline, including downloading the raw data from s3, preprocessing the data, training the model and generating the recommendation results. The final output is stored in data/final/results.csv. Next, we will describe how to run each step in the in the pipeline and the location of artifacts produced from each step. Note that those four steps below need to be run sequentially.
+
+### Download Raw Data from S3
+
+You can download the data from s3 to local with the following command. You can specify your S3 path by replacing the {your_s3_path} below. The default S3_PATH is 's3://2021-msia423-wenyang-pan/raw/pokemon.csv'. This step will store the raw data to data/raw/pokemon.csv.
+
+```angular2html
+make s3_download S3_PATH= {your_s3_path}
+```
+
+### Get the best number of cluster
+
+You can get the best number of cluster, this command will generate plots that will show 
+the best number of clusters (elbow point of the F and Silhouette score), which is 8 for this
+dataset. 
+
+```angular2html
+make get_para
+```
+
+### Clustering
+
+You can run the following command to cluster the data. This command will output and store a list of mod labels
+under the data/run directory 
+
+```angular2html
+make clustering
+```
+
+### Get song recommendation
+You can run the following command to generate a dataset that has corresponding recommendation
+for each of the song, which will store as file run_rds.csv under data/sample.
+```angular2html
+make get_rec
+```
+
+
+## Store Result in RDS Database
+### 2. Connecting to remote databases
+
+##### Requirements
+To successfully connect to the remote databases, you need too:
+
+1. Connect to the Northwestern VPN.
+
+2. Build the kpop_recommender image built as described in the [Docker Image section].
+
+
+3. You need to set up the following environment variables from building your
+   AWS credential section. Note please replace the section within and including the "".
+```
+   export MYSQL_USER="YOUR_SQL_USER_NAME"
+   export MYSQL_PASSWORD="YOUR_SQL_PASSWORD"
+   export MYSQL_HOST="YOUR_SQL_HOST"
+   export MYSQL_PORT="YOUR_SQL_PORT"
+   export DATABASE_NAME="YOUR_DATABASE_NAME"
+```
+
+##### Connecting to MYSQL
+
+To connect to your MYSQL database, run the following command:
+
+```
+make mysql-it
+```
+If you succeeded, you will enter the interactive mysql session. To view your tables, use the commands:\
+to login into the sqlite platform:
+```
+show databases; 
+```
+to switch to a specific database:
+```
+use {database name}; 
+```
+to view tables in the database:
+```
+show tables;
+```
+#### Create database with sqlite
+To create a database on your sqlite, use the command
+```
+python3 run_db.py create_db --engine_string=={your_engine_string}
+```
 
 #### Create the database 
 To create the database in the location configured in `config.py` run: 
@@ -139,12 +228,30 @@ To create the database in the location configured in `config.py` run:
 
 By default, `python run_db.py create_db` creates a database at `sqlite:///data/tracks.db`.
 
+You can also run this command to run it on docker:
+
+```angular2html
+make create_db
+```
 #### Adding songs 
 To add songs to the database:
 
 `python run_db.py ingest --engine_string=<engine_string> --artist=<ARTIST> --title=<TITLE> --album=<ALBUM>`
 
 By default, `python run_db.py ingest` adds *Dis-ease* by bts to the SQLite database.
+
+You can also run this command to run it on docker:
+
+```angular2html
+make ingest
+```
+
+#### Uploading the entire run_rds.csv to RDS
+You can also run this command to uploading the entire run_rds.csv to RDS:
+
+```angular2html
+make load_db
+```
 
 #### A Note on Engine String 
 A SQLAlchemy database connection is defined by a string with the following format:
@@ -167,87 +274,38 @@ You can also define the absolute path with four `////`, for example:
 ```python
 engine_string = 'sqlite://///Users/Desktop/MSIAHW/423/2021-msia423-Wu-Qiaozhen-project/data/kpop_recommender.db'
 ```
-### 2. Connecting to remote databases 
 
-##### Requirements 
-To successfully connect to the remote databases, you need too:
+### Launch the App 
 
-1. Connect to the Northwestern VPN. 
-   
+Launch with Established Database
 
-2. Build the kpop_recommender image built as described in the [Docker Image section].
-   
+You already ingest the recommendation results into the database as described above. You should be able to launch the app with the following command. Note that the SQLALCHEMY_DATABASE_URI environment variable will determine which database the app connects to.
+```angular2html
+make run_app_local
+```
+Now you should be able to access the app at http://0.0.0.0:5000/ in your browser.
 
-3. You need to set up the following environment variables from building your 
-AWS credential section. Note please replace the section within and including the "".
-```
-   export MYSQL_USER="YOUR_SQL_USER_NAME"
-   export MYSQL_PASSWORD="YOUR_SQL_PASSWORD"
-   export MYSQL_HOST="YOUR_SQL_HOST"
-   export MYSQL_PORT="YOUR_SQL_PORT"
-   export DATABASE_NAME="YOUR_DATABASE_NAME"
-```
+This command runs the kpop_recommender image as a container named test and forwards the port 5000 from container to your laptop so that you can access the flask app exposed through that port. If PORT in config/flaskconfig.py is changed, this port should be changed accordingly (as should the EXPOSE 5000 line in app/Dockerfile)
 
-##### 1. Connecting to MYSQL
+### Launch from Scratch
 
-To connect to your MYSQL database, run the following command:
-
-```
-docker run -it\
-    --rm mysql:5.7.33 mysql\
-    -h$MYSQL_HOST\
-    -u$MYSQL_USER\
-    -p$MYSQL_PASSWORD\
-```
-If you succeeded, you will enter the interactive mysql session. To view your tables, use the commands:\
-to login into the sqlite platform:
-```
-show databases; 
-```
-to switch to a specific database:
-```
-use {database name}; 
-```
-to view tables in the database:
-```
-show tables;
+If you have only built the two docker images but do not run the model pipeline and set up the database, you can do all the work and launch the app with the following.
+```angular2html
+make all_in_one
 ```
 
-##### 2. Create database with docker image
+### Kill the container
+Once finished with the app, you will need to kill the container. To do so:
 
-To create a new databases, use the the following command. The script specifies the engine string in config/flaskconfig.py.
-```
-docker run -it\
-    -e MYSQL_HOST\ 
-    -e MYSQL_PORT\ 
-    -e MYSQL_USER\ 
-    -e MYSQL_PASSWORD\ 
-    -e DATABASE_NAME kpop_recommender run.py create_db --engine_string=={your_engine_string}
-```
-#### Create database with sqlite
-To create a database on your sqlite, use the command
-```
-python3 run_db.py create_db --engine_string=={your_engine_string}
+```angular2html
+docker kill test 
 ```
 
-##### 3. Ingest data into database with docker image
-Your can also ingest data through the following command. If you don't specify the parameters "artist","album","title," the default would "bts","BE","Dis-ease" respectively.
-```
-docker run -it\ 
-    -e MYSQL_HOST\
-    -e MYSQL_PORT\
-    -e MYSQL_USER\
-    -e MYSQL_PASSWORD\ 
-    -e DATABASE_NAME kpop_recommender run.py ingest --artist={your_artist} --album={your_album} --title ={your_song_title}
-```
-#### Ingest data into database with sqlite
-To ingest data to sqlite, use the command:
-```
-python3 run_db.py ingest\
-    --artist={your_artist}\ 
-    --album={your_album}\ 
-    --title ={your_song_title}\ 
-    --engine_string=={your_engine_string} --local_path=<local path to data>
-```
 
- 
+###Unit Test
+
+Unit tests are implemented when appropriate for modules in this project. You can run these tests with this command:
+
+```angular2html
+make pytest
+```

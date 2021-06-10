@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.css.map" integrity="undefined" crossorigin="anonymous">
+</head>
+
+<STYLE>A {text-decoration: none;}
+img { display: block;
+margin-left: auto;
+margin-right: auto;
+width: 30%;}
+h3 {text-align: center;
+    font-size: 40px;}
+p {text-align: center;}
+div {text-align: center;}
+form {text-align: center;
+    font-family:'Courier';
+    font-size: 30px;}
+
+select{
+    font-size: 20px;
+    width: 200px;
+    height: 25px;
+    text-align: center;
+}
+</STYLE>
+
+<body>
+<h3>
+    <a style="font-family:'Courier'" href = "{{ url_for('index') }}">K-pop Music Recommender</a>
+</h3>
+<img src="../static/seoul.png" class="center">
+<div class="alert alert-danger" role="alert">
+    <p style="font-family:'Chalkduster'" class="alert-link">&#128251; Choose a song by {{ artist_header}} &#128236;</p>
+</div>
+<form action="{{ url_for('get_recommend_2') }}" method=post class=add-entry>
+    <dl>
+        <select name= artist_name method="GET" action="/">
+            {% for a in artist_name %}
+                <option value= "{{a}}" SELECTED>{{a}}</option>"
+            {% endfor %}
+            </select>
+        <select name= song_name method="GET" action="/">
+            {% for t in song_name %}
+                <option value= "{{t}}" SELECTED>{{t}}</option>"
+            {% endfor %}
+        </select>
+        <input type=submit value=submit>
+    </dl>
+</form>
+
+</body>
+</html>

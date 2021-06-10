@@ -1,0 +1,36 @@
+get_para:
+  subset:
+    songs_list : ["artist","release_date","track_name","danceability",
+                  "energy","key","loudness","mode","speechiness","acousticness",
+                  "instrumentalness","liveness","valence","tempo","type"]
+  scale:
+    selected_columns: [ "danceability","energy","key","loudness","mode","speechiness",
+                        "acousticness","instrumentalness","liveness","valence","tempo" ]
+  get_a_mod_list_and_dict:
+    cluster_range: [7,8,9,10]
+    seed: 36
+  cluster_selection_plot:
+    cluster_range: [7,8,9,10]
+  store_train:
+    path: "data/run/df_train.csv"
+clustering:
+  load_train:
+    path: "data/run/df_train.csv"
+  quick_result:
+    seed: 36
+  store_mod_labels:
+    path: "data/run/mod_labels.csv"
+get_rec:
+  load_songs:
+    subset_l: ["artist","release_date","track_name","danceability","energy","key","loudness",
+               "mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo","type"]
+  load_labels:
+    path: "data/run/mod_labels.csv"
+  scale:
+    selected_columns: ["danceability","energy","key","loudness","mode","speechiness","acousticness",
+                       "instrumentalness","liveness","valence","tempo"]
+  get_cluster_df:
+    selected_columns: ["danceability","energy","key","loudness","mode","speechiness","acousticness",
+                       "instrumentalness","liveness","valence","tempo"]
+  store_rds:
+    path: "data/sample/run_rds.csv"
