@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.css.map" integrity="undefined" crossorigin="anonymous">
+</head>
+
+<STYLE>A {text-decoration: none;}
+img { display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 40%;}
+h3 {text-align: center;
+    font-size: 40px;}
+p {text-align: center;
+    font-size: 30px;}
+div {text-align: center;}
+form {text-align: center;
+    font-family:'Courier';
+    font-size: 30px;}
+
+</STYLE>
+
+<body>
+<h3>
+    <a style="font-family:'Courier'" href = "{{ url_for('index') }}">K-pop Music Recommender</a>
+</h3>
+
+
+<div class="alert alert-danger" role="alert">
+    <p style="font-family:'Chalkduster'" class="alert-link">&#127911; Maybe you will like <a href={{link}} target=_blank> {{ k_song }} </a> by {{ k_artist}} </p>
+</div>
+
+<img src="../static/jikook.png" class="center">
+
+<div class="alert alert-danger" role="alert">
+    <p style="font-family:'Chalkduster'" class="alert-link"> &#128171; </p>
+</div>
+
+</body>
+</html>
